@@ -10,7 +10,7 @@
           <h2 class="middle">电商后台管理系统</h2>
         </el-col>
         <el-col :span="1">
-          <a href class="logout">退出</a>
+          <a href class="logout" @click.prevent='handleLogout()'>退出</a>
         </el-col>
       </el-row>
     </el-header>
@@ -19,6 +19,7 @@
       <!-- 侧边栏 -->
       <el-aside width="200px" class="aside">
         <el-menu
+          router
           default-active="2"
           class="el-menu-vertical-demo"
           :unique-opened="true">
@@ -30,7 +31,7 @@
               <span>用户管理</span>
             </template>
 
-            <el-menu-item index="1-1">
+            <el-menu-item index="users">
               <i class="el-icon-location"></i>
               用户列表
             </el-menu-item>
@@ -105,13 +106,39 @@
       </el-aside>
 
       <!-- 主体内容 -->
-      <el-main class="main">Main</el-main>
+      <el-main class="main">
+         <router-view></router-view>
+      </el-main>
     </el-container>
   </el-container>
 </template>
 
 <script>
-export default {};
+export default {
+  // 在组件渲染之前，newVue之前验证token
+  beforeCreate () {
+    if (!localStorage.getItem('token')) {
+      // 回到登录页
+      this.$router.push({
+        name: 'login'
+      });
+      // 未登录提示
+      this.$message.warning('请先登录');
+    }
+  },
+  methods: {
+    handleLogout() {
+      // 1.清除token,清空所有
+      localStorage.clear();
+      // 2.回到登录页
+      this.$router.push({
+        name: 'login'
+      });
+      // 3.退出成功提示
+      this.$message.success('退出成功');
+    }
+   }
+}
 </script>
 
 <style>
@@ -129,10 +156,10 @@ export default {};
   text-decoration: none;
   line-height: 60px;
 }
-.aside {
+/* .aside {
   background-color: yellowgreen;
 }
 .main {
   background-color: pink;
-}
+} */
 </style>

@@ -25,24 +25,24 @@ export default {
     }
   },
   methods: {
-  async handleLogin() {
+    async handleLogin () {
       const res = await
       this.$http.post('login', this.formdata)
       // .then((res) => {
-        // console.log(res);
-        const {status,data:{data,meta:{msg}}} = res;
-        if (status === 200) {
-           // 保存token值(将来写其他功能时会用)
-          localStorage.setItem('token',data.token)
-          //
-          // localStorage.getItem('token')
-          // 渲染home组件
-          this.$router.push({
-            name: 'home'
-          })
-        } else {
-          this.$message.warning(msg)
-        }
+      // console.log(res);
+      const {status, data: {data, meta: {msg}}} = res
+      if (status === 200) {
+        // 保存token值(将来写其他功能时会用)
+        localStorage.setItem('token', data.token)
+        //
+        // localStorage.getItem('token')
+        // 渲染home组件
+        this.$router.push({
+          name: 'home'
+        })
+      } else {
+        this.$message.warning(msg)
+      }
       // })
     }
   }
