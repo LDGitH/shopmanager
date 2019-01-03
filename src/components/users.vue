@@ -49,16 +49,16 @@
       <el-table-column label="操作" width="180">
         <template slot-scope="scope">
           <el-row>
-            <el-button 
-            type="primary" 
-            icon="el-icon-edit" 
-            size="mini" 
+            <el-button
+            type="primary"
+            icon="el-icon-edit"
+            size="mini"
             plain circle
             @click="showEditDia(scope.row)"></el-button>
-            <el-button 
-            type="danger" 
-            icon="el-icon-delete" 
-            size="mini" 
+            <el-button
+            type="danger"
+            icon="el-icon-delete"
+            size="mini"
             plain circle
             @click="showDeleConfim(scope.row)"></el-button>
             <el-button type="success" icon="el-icon-check" size="mini" plain circle></el-button>
@@ -129,107 +129,107 @@ layout 分页组件的小功能
 
 <script>
 export default {
-  data() {
+  data () {
     return {
       tableData: [],
-      query: "",
-      pagenum: "1",
-      pagesize: "2",
+      query: '',
+      pagenum: '1',
+      pagesize: '2',
       total: -1,
       form: {
-          username: '',
-          password: '',
-          email: '',
-          mobile: ''
+        username: '',
+        password: '',
+        email: '',
+        mobile: ''
       },
       formLabelWidth: '100px',
-      // 添加用户对话框默认隐藏  
+      // 添加用户对话框默认隐藏
       dialogFormVisibleAdd: false,
       dialogFormVisibleEdit: false
-    };
+    }
   },
-  created() {
-    this.getTableData();
+  created () {
+    this.getTableData()
   },
   methods: {
     // 编辑用户 - 发送请求
-    editUser() {},
+    editUser () {},
     // 编辑用户-发开对话框
-    showEditDia() {
-      this.dialogFormVisibleEdit = true;
+    showEditDia () {
+      this.dialogFormVisibleEdit = true
     },
     // 删除用户-打开提示框
-    showDeleConfim(user) {
+    showDeleConfim (user) {
       // console.log(user);
 
-      this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
+      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
       })
         .then(async () => {
           // 发送删除的请求  id是用户id
-          const res = await this.$http.delete(`users/${user.id}`);
+          const res = await this.$http.delete(`users/${user.id}`)
           // console.log(res);
           const {
             meta: { msg, status }
-          } = res.data;
+          } = res.data
           if (status === 200) {
-            this.$message.success(msg);
-            this.pagenum = 1;
-            this.getTableData();
+            this.$message.success(msg)
+            this.pagenum = 1
+            this.getTableData()
           }
         })
         .catch(() => {
-          this.$message.warning("取消删除");
-        });
+          this.$message.warning('取消删除')
+        })
       //
     },
     // 添加用户--发送请求
-    async addUser() {
+    async addUser () {
     // 发送请求
-    const res = await this.$http.post('users', this.form);
-    const {
+      const res = await this.$http.post('users', this.form)
+      const {
         meta: { msg, status }
-      } = res.data;
-    if (status === 201) {
+      } = res.data
+      if (status === 201) {
         // 提示框
-        this.$message.success(msg);
+        this.$message.success(msg)
         // 关闭对话框
-        this.dialogFormVisibleAdd = false;
+        this.dialogFormVisibleAdd = false
         // 刷新表格
-        this.getTableData();
-    } else {
-        this.$message.warning(msg);
-    }
+        this.getTableData()
+      } else {
+        this.$message.warning(msg)
+      }
     },
     // 添加用户--显示对话框
-    showDiaAdd() {
-        this.form = {};
-        this.dialogFormVisibleAdd = true;
+    showDiaAdd () {
+      this.form = {}
+      this.dialogFormVisibleAdd = true
     },
     // 点击清空按钮时
-    getAllUsers() {
-      this.getTableData();
+    getAllUsers () {
+      this.getTableData()
     },
     // 搜索
-    searchUser() {
-      this.pagenum = 1;
-      this.getTableData();
+    searchUser () {
+      this.pagenum = 1
+      this.getTableData()
     },
     // 分页相关的方法
-    handleSizeChange(val) {
+    handleSizeChange (val) {
       // console.log(`每页 ${val} 条`);
-      this.pagesize = val;
-      this.pagenum = 1;
-      this.getTableData();
+      this.pagesize = val
+      this.pagenum = 1
+      this.getTableData()
     },
-    handleCurrentChange(val) {
-      this.pagenum = val;
+    handleCurrentChange (val) {
+      this.pagenum = val
       // console.log(`当前页: ${val}`);
-      this.getTableData();
+      this.getTableData()
     },
-    async getTableData() {
+    async getTableData () {
       // query	查询参数	可以为空
       // pagenum	当前页码	不能为空
       // pagesize	每页显示条数	不能为空
@@ -238,14 +238,14 @@ export default {
       // 在发起请求(除了登录之外的)之前 需要设置请求头
 
       //
-      const AUTH_TOKEN = localStorage.getItem("token");
-      this.$http.defaults.headers.common["Authorization"] = AUTH_TOKEN;
+      const AUTH_TOKEN = localStorage.getItem('token')
+      this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN
 
       const res = await this.$http.get(
         `users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${
           this.pagesize
         }`
-      );
+      )
 
       // console.log(res);
 
@@ -254,18 +254,18 @@ export default {
           data: { total, users },
           meta: { status, msg }
         }
-      } = res;
+      } = res
       if (status === 200) {
         // 1. 给表格数据赋值
-        this.tableData = users;
-        this.total = total;
-        console.log(this.tableData);
-        //2. 提示
-        this.$message.success(msg);
+        this.tableData = users
+        this.total = total
+        console.log(this.tableData)
+        // 2. 提示
+        this.$message.success(msg)
       }
     }
   }
-};
+}
 </script>
 
 <style>

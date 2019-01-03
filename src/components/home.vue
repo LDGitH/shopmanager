@@ -121,23 +121,23 @@ export default {
       // 回到登录页
       this.$router.push({
         name: 'login'
-      });
+      })
       // 未登录提示
-      this.$message.warning('请先登录');
+      this.$message.warning('请先登录')
     }
   },
   methods: {
-    handleLogout() {
+    handleLogout () {
       // 1.清除token,清空所有
-      localStorage.clear();
+      localStorage.clear()
       // 2.回到登录页
       this.$router.push({
         name: 'login'
-      });
+      })
       // 3.退出成功提示
-      this.$message.success('退出成功');
+      this.$message.success('退出成功')
     }
-   }
+  }
 }
 </script>
 

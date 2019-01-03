@@ -10,7 +10,7 @@ import router from './router'
 import moment from 'moment'
 // 过滤器处理日期格式
 Vue.filter('fmtDate', (v) => {
-  return moment(v).format('YYYY-MM-DD');
+  return moment(v).format('YYYY-MM-DD')
 })
 Vue.use(Http)
 Vue.use(ElementUI)
