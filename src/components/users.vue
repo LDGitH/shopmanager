@@ -19,7 +19,7 @@
         >
           <el-button @click="searchUser()" slot="append" icon="el-icon-search"></el-button>
         </el-input>
-        <el-button type="primary" @click='showDiaAdd()'>添加用户</el-button>
+        <el-button type="primary" @click="showDiaAdd()">添加用户</el-button>
       </el-col>
     </el-row>
 
@@ -43,25 +43,41 @@
       </el-table-column>
       <el-table-column label="用户状态" width="140">
         <template slot-scope="scope">
-          <el-switch v-model="scope.row.mg_state" active-color="#13ce66" inactive-color="#ff4949"></el-switch>
+          <el-switch
+            @change="changeUserState(scope.row)"
+            v-model="scope.row.mg_state"
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          ></el-switch>
         </template>
       </el-table-column>
       <el-table-column label="操作" width="180">
         <template slot-scope="scope">
           <el-row>
             <el-button
-            type="primary"
-            icon="el-icon-edit"
-            size="mini"
-            plain circle
-            @click="showEditDia(scope.row)"></el-button>
+              type="primary"
+              icon="el-icon-edit"
+              size="mini"
+              plain
+              circle
+              @click="showEditDia(scope.row)"
+            ></el-button>
             <el-button
-            type="danger"
-            icon="el-icon-delete"
-            size="mini"
-            plain circle
-            @click="showDeleConfim(scope.row)"></el-button>
-            <el-button type="success" icon="el-icon-check" size="mini" plain circle></el-button>
+              type="danger"
+              icon="el-icon-delete"
+              size="mini"
+              plain
+              circle
+              @click="showDeleConfim(scope.row)"
+            ></el-button>
+            <el-button
+              type="success"
+              icon="el-icon-check"
+              size="mini"
+              plain
+              circle
+              @click="showDiaRole(scope.row)"
+            ></el-button>
           </el-row>
         </template>
       </el-table-column>
@@ -105,6 +121,7 @@ layout 分页组件的小功能
         <el-button type="primary" @click="addUser()">确 定</el-button>
       </div>
     </el-dialog>
+
     <!-- 编辑用户对话框 -->
     <el-dialog title="编辑用户" :visible.sync="dialogFormVisibleEdit">
       <el-form :model="form">
@@ -124,112 +141,196 @@ layout 分页组件的小功能
         <el-button type="primary" @click="editUser()">确 定</el-button>
       </div>
     </el-dialog>
+
+    <!-- 分配角色对话框 -->
+    <el-dialog title="分配角色" :visible.sync="dialogFormVisibleRole">
+      <el-form :model="form">
+        <el-form-item label="用户名" :label-width="formLabelWidth">
+          {{currUserName}}
+        </el-form-item>
+        <el-form-item label="角色" :label-width="formLabelWidth">
+          <el-select v-model="currUserRoleId">
+            <el-option disabled label="请选择" :value="-1"></el-option>
+            <el-option v-for='(v,i) in roles' :key="i" 
+            :label="v.roleName" :value="v.id"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisibleRole = false">取 消</el-button>
+        <el-button type="primary" @click="setRole()">确 定</el-button>
+      </div>
+    </el-dialog>
   </el-card>
 </template>
 
 <script>
 export default {
-  data () {
+  data() {
     return {
       tableData: [],
-      query: '',
-      pagenum: '1',
-      pagesize: '2',
+      query: "",
+      pagenum: "1",
+      pagesize: "2",
       total: -1,
       form: {
-        username: '',
-        password: '',
-        email: '',
-        mobile: ''
+        username: "",
+        password: "",
+        email: "",
+        mobile: ""
       },
-      formLabelWidth: '100px',
+      formLabelWidth: "100px",
       // 添加用户对话框默认隐藏
       dialogFormVisibleAdd: false,
-      dialogFormVisibleEdit: false
-    }
+      dialogFormVisibleEdit: false,
+      dialogFormVisibleRole: false,
+      // 下拉框绑定的数据
+      currUserRoleId: -1,
+      roles: [],
+      currUserName: '',
+      currUserId: -1
+    };
   },
-  created () {
-    this.getTableData()
+  created() {
+    this.getTableData();
   },
   methods: {
+    // 分配角色--发送请求
+    async setRole() {
+    const res = await this.$http.put(`users/${this.currUserId}/role`, {
+     rid: this.currUserRoleId
+    });
+    // console.log(res);
+    this.dialogFormVisibleRole = false;
+    },
+    // 分配角色-显示对话框
+    async showDiaRole(user) {
+      // 获取用户id
+      this.currUserId = user.id;
+      // 将用户名和角色在页面上显示
+      this.currUserName = user.username;
+
+      // 获取角色列表
+      const res = await this.$http.get(`roles`);
+      this.roles = res.data.data;
+      // console.log(this.roles);
+      // 请求user用户的角色id
+      const res2 = await this.$http.get(`users/${user.id}`);
+      // console.log(res2);
+      this.currUserRoleId = res2.data.data.rid;
+
+      this.dialogFormVisibleRole = true;
+    },
+    // 修改用户状态
+    async changeUserState(user) {
+      const res = await this.$http.put(
+        `users/${user.id}/state/${user.mg_state}`
+      );
+      // console.log(res);
+      const {
+        meta: { msg, status }
+      } = res.data;
+      if (status === 200) {
+        // 刷新表格
+        this.getTableData();
+      } else {
+        this.$message.warning(msg);
+      }
+    },
     // 编辑用户 - 发送请求
-    editUser () {},
-    // 编辑用户-发开对话框
-    showEditDia () {
-      this.dialogFormVisibleEdit = true
+    async editUser() {
+      const res = await this.$http.put(`users/${this.form.id}`, this.form);
+      // console.log(res);
+      const {
+        meta: { msg, status }
+      } = res.data;
+      if (status === 200) {
+        // 关闭对话框
+        this.dialogFormVisibleEdit = false;
+        // 刷新表格
+        this.getTableData();
+      } else {
+        this.$message.warning(msg);
+      }
+    },
+    // 编辑用户-展开对话框
+    showEditDia(user) {
+      // console.log(user);
+      this.form = user;
+      this.dialogFormVisibleEdit = true;
     },
     // 删除用户-打开提示框
-    showDeleConfim (user) {
+    showDeleConfim(user) {
       // console.log(user);
 
-      this.$confirm('此操作将永久删除该文件, 是否继续?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
+      this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
       })
         .then(async () => {
           // 发送删除的请求  id是用户id
-          const res = await this.$http.delete(`users/${user.id}`)
+          const res = await this.$http.delete(`users/${user.id}`);
           // console.log(res);
           const {
             meta: { msg, status }
-          } = res.data
+          } = res.data;
           if (status === 200) {
-            this.$message.success(msg)
-            this.pagenum = 1
-            this.getTableData()
+            this.$message.success(msg);
+            this.pagenum = 1;
+            this.getTableData();
           }
         })
         .catch(() => {
-          this.$message.warning('取消删除')
-        })
+          this.$message.warning("取消删除");
+        });
       //
     },
     // 添加用户--发送请求
-    async addUser () {
-    // 发送请求
-      const res = await this.$http.post('users', this.form)
+    async addUser() {
+      // 发送请求
+      const res = await this.$http.post("users", this.form);
       const {
         meta: { msg, status }
-      } = res.data
+      } = res.data;
       if (status === 201) {
         // 提示框
-        this.$message.success(msg)
+        this.$message.success(msg);
         // 关闭对话框
-        this.dialogFormVisibleAdd = false
+        this.dialogFormVisibleAdd = false;
         // 刷新表格
-        this.getTableData()
+        this.getTableData();
       } else {
-        this.$message.warning(msg)
+        this.$message.warning(msg);
       }
     },
     // 添加用户--显示对话框
-    showDiaAdd () {
-      this.form = {}
-      this.dialogFormVisibleAdd = true
+    showDiaAdd() {
+      this.form = {};
+      this.dialogFormVisibleAdd = true;
     },
     // 点击清空按钮时
-    getAllUsers () {
-      this.getTableData()
+    getAllUsers() {
+      this.getTableData();
     },
     // 搜索
-    searchUser () {
-      this.pagenum = 1
-      this.getTableData()
+    searchUser() {
+      this.pagenum = 1;
+      this.getTableData();
     },
     // 分页相关的方法
-    handleSizeChange (val) {
+    handleSizeChange(val) {
       // console.log(`每页 ${val} 条`);
-      this.pagesize = val
-      this.pagenum = 1
-      this.getTableData()
+      this.pagesize = val;
+      this.pagenum = 1;
+      this.getTableData();
     },
-    handleCurrentChange (val) {
-      this.pagenum = val
+    handleCurrentChange(val) {
+      this.pagenum = val;
       // console.log(`当前页: ${val}`);
-      this.getTableData()
+      this.getTableData();
     },
-    async getTableData () {
+    async getTableData() {
       // query	查询参数	可以为空
       // pagenum	当前页码	不能为空
       // pagesize	每页显示条数	不能为空
@@ -238,14 +339,14 @@ export default {
       // 在发起请求(除了登录之外的)之前 需要设置请求头
 
       //
-      const AUTH_TOKEN = localStorage.getItem('token')
-      this.$http.defaults.headers.common['Authorization'] = AUTH_TOKEN
+      const AUTH_TOKEN = localStorage.getItem("token");
+      this.$http.defaults.headers.common["Authorization"] = AUTH_TOKEN;
 
       const res = await this.$http.get(
         `users?query=${this.query}&pagenum=${this.pagenum}&pagesize=${
           this.pagesize
         }`
-      )
+      );
 
       // console.log(res);
 
@@ -254,18 +355,18 @@ export default {
           data: { total, users },
           meta: { status, msg }
         }
-      } = res
+      } = res;
       if (status === 200) {
         // 1. 给表格数据赋值
-        this.tableData = users
-        this.total = total
-        console.log(this.tableData)
+        this.tableData = users;
+        this.total = total;
+        // console.log(this.tableData)
         // 2. 提示
-        this.$message.success(msg)
+        this.$message.success(msg);
       }
     }
   }
-}
+};
 </script>
 
 <style>
